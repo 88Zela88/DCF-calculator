@@ -3,96 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DCF Kalkulačka 2026</title>
+    <title>DCF Kalkulačka 2026 - Alpha Vantage</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-900 text-white font-sans p-6">
+<body class="bg-gray-900 text-gray-100 min-h-screen p-6">
 
-    <div class="max-w-xl mx-auto bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700">
-        <h1 class="text-2xl font-black mb-6 text-center tracking-tighter text-green-400">STOCK ANALYZER 2026</h1>
+    <div class="max-w-xl mx-auto bg-gray-800 p-8 rounded-3xl shadow-2xl border border-gray-700">
+        <h1 class="text-3xl font-black mb-6 text-center text-blue-400">ALPHA ANALYZER</h1>
         
         <div class="flex gap-2 mb-8">
-            <input type="text" id="ticker" placeholder="AAPL" class="flex-1 bg-slate-900 border-2 border-slate-700 p-4 rounded-2xl uppercase focus:border-green-500 outline-none font-bold text-xl">
-            <button onclick="fetchData()" id="fetchBtn" class="bg-green-500 text-slate-900 px-6 py-4 rounded-2xl font-black hover:bg-green-400 transition active:scale-95">NAČÍST</button>
+            <input type="text" id="ticker" placeholder="MSFT" class="flex-1 bg-gray-900 border-2 border-gray-700 p-4 rounded-2xl uppercase focus:border-blue-500 outline-none font-bold text-xl">
+            <button onclick="fetchData()" id="fetchBtn" class="bg-blue-600 text-white px-6 py-4 rounded-2xl font-black hover:bg-blue-500 transition active:scale-95">NAČÍST</button>
         </div>
 
         <div class="grid grid-cols-2 gap-4 mb-8">
-            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-700">
-                <label class="text-[10px] uppercase font-bold text-slate-500">FCF (mil. $)</label>
+            <div class="bg-gray-900 p-4 rounded-2xl border border-gray-700">
+                <label class="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Free Cash Flow (mil. $)</label>
                 <input type="number" id="fcf" step="any" class="w-full bg-transparent text-xl font-bold outline-none text-white mt-1">
             </div>
-            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-700">
-                <label class="text-[10px] uppercase font-bold text-slate-500">Akcie (mil.)</label>
+            <div class="bg-gray-900 p-4 rounded-2xl border border-gray-700">
+                <label class="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Akcie v oběhu (mil.)</label>
                 <input type="number" id="shares" step="any" class="w-full bg-transparent text-xl font-bold outline-none text-white mt-1">
             </div>
-            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-700">
-                <label class="text-[10px] uppercase font-bold text-slate-500">Růst (%)</label>
+            <div class="bg-gray-900 p-4 rounded-2xl border border-gray-700">
+                <label class="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Růst (%)</label>
                 <input type="number" id="growth" value="10" class="w-full bg-transparent text-xl font-bold outline-none text-green-400 mt-1">
             </div>
-            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-700">
-                <label class="text-[10px] uppercase font-bold text-slate-500">Diskont (%)</label>
+            <div class="bg-gray-900 p-4 rounded-2xl border border-gray-700">
+                <label class="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Sleva (%)</label>
                 <input type="number" id="discount" value="8" class="w-full bg-transparent text-xl font-bold outline-none text-red-400 mt-1">
             </div>
         </div>
 
-        <button onclick="calculateDCF()" class="w-full bg-white text-slate-900 font-black py-5 rounded-2xl hover:bg-slate-200 transition text-lg uppercase mb-6">Spočítat vnitřní hodnotu</button>
+        <button onclick="calculateDCF()" class="w-full bg-white text-gray-900 font-black py-5 rounded-2xl hover:bg-gray-200 transition text-lg uppercase mb-6 shadow-lg">Vypočítat férovou cenu</button>
 
-        <div id="status" class="text-center text-sm mb-4 italic text-slate-500"></div>
+        <div id="status" class="text-center text-sm mb-4 italic text-gray-400"></div>
 
-        <div id="resultBox" class="hidden p-6 bg-green-500 text-slate-900 rounded-3xl text-center shadow-lg">
-            <p class="text-xs font-bold uppercase opacity-70">Férová cena na akcii:</p>
+        <div id="resultBox" class="hidden p-6 bg-blue-600 text-white rounded-3xl text-center shadow-xl animate-bounce-short">
+            <p class="text-xs font-bold uppercase opacity-80">Vnitřní hodnota na akcii:</p>
             <h2 id="intrinsicPrice" class="text-5xl font-black my-2">--</h2>
-            <div class="bg-green-600/20 p-3 rounded-xl mt-4">
-                <p class="text-sm font-bold">Aktuální cena: <span id="mktPrice">--</span></p>
-                <p id="mos" class="text-xl font-black uppercase tracking-tight"></p>
+            <div class="bg-blue-700/30 p-3 rounded-xl mt-4 border border-blue-400/20 text-sm">
+                <p>Aktuální tržní cena: <span id="mktPrice" class="font-bold">--</span></p>
+                <p id="mos" class="text-xl font-black uppercase tracking-tight mt-1"></p>
             </div>
         </div>
     </div>
 
     <script>
-        const API_KEY = 'TDAEXfruGIrHWfxNJuP28M3GIb3xU6UD';
+        // --- ZDE VLOŽTE SVŮJ NOVÝ KLÍČ Z ALPHAVANTAGE.CO ---
+        const API_KEY = '5O9MCEV23ZA0O5EB'; 
 
         async function fetchData() {
             const ticker = document.getElementById('ticker').value.toUpperCase().trim();
             const status = document.getElementById('status');
-            const btn = document.getElementById('fetchBtn');
             if (!ticker) return;
 
-            status.innerText = "⏳ Komunikuji s novým rozhraním API...";
-            btn.disabled = true;
-
+            status.innerText = "⏳ Načítám finanční výkazy...";
+            
             try {
-                // Nový přístup: V roce 2026 FMP doporučuje pro free uživatele používat konkrétní profily
-                const quoteRes = await fetch(`https://financialmodelingprep.com/api/v3/quote/${ticker}?apikey=${API_KEY}`);
+                // 1. Získání ceny akcie
+                const quoteRes = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${API_KEY}`);
                 const qData = await quoteRes.json();
+                
+                // 2. Získání Cash Flow a počtu akcií
+                const overviewRes = await fetch(`https://www.alphavantage.co/query?function=OVERVIEW&symbol=${ticker}&apikey=${API_KEY}`);
+                const oData = await overviewRes.json();
 
-                // Pokud v3 hází chybu, zkusíme v4 (některé endpointy se přesunuly)
-                const cfRes = await fetch(`https://financialmodelingprep.com/api/v3/cash-flow-statement/${ticker}?period=annual&limit=1&apikey=${API_KEY}`);
+                const cfRes = await fetch(`https://www.alphavantage.co/query?function=CASH_FLOW&symbol=${ticker}&apikey=${API_KEY}`);
                 const cfData = await cfRes.json();
 
-                if (qData && qData.length > 0) {
-                    const stock = qData[0];
-                    document.getElementById('shares').value = (stock.sharesOutstanding / 1000000).toFixed(2);
-                    window.marketPrice = stock.price;
-                    document.getElementById('mktPrice').innerText = "$" + window.marketPrice.toFixed(2);
+                if (qData["Global Quote"] && oData["Symbol"]) {
+                    const price = parseFloat(qData["Global Quote"]["05. price"]);
+                    const shares = parseFloat(oData["SharesOutstanding"]);
+                    
+                    // Výpočet FCF (Operating Cash Flow - Capital Expenditures) z posledního ročního výkazu
+                    const lastAnnual = cfData["annualReports"][0];
+                    const fcf = (parseFloat(lastAnnual.operatingCashflow) - parseFloat(lastAnnual.capitalExpenditures));
 
-                    if (cfData && cfData.length > 0) {
-                        document.getElementById('fcf').value = (cfData[0].freeCashFlow / 1000000).toFixed(2);
-                    } else {
-                        // Pokud CF endpoint selže kvůli Legacy chybě, použijeme odhad z Market Capu (4%)
-                        document.getElementById('fcf').value = (stock.marketCap * 0.04 / 1000000).toFixed(2);
-                        status.innerText = "⚠️ Použit odhad FCF (v3 CF endpoint omezen)";
-                    }
-
-                    status.innerText = `✅ ${stock.name} připraven k analýze`;
+                    document.getElementById('fcf').value = (fcf / 1000000).toFixed(2);
+                    document.getElementById('shares').value = (shares / 1000000).toFixed(2);
+                    
+                    window.marketPrice = price;
+                    document.getElementById('mktPrice').innerText = "$" + price.toFixed(2);
+                    status.innerText = `✅ Data pro ${ticker} byla úspěšně načtena.`;
+                    status.className = "text-center text-sm mb-4 italic text-green-400 font-bold";
                 } else {
-                    throw new Error("Nepodařilo se načíst data pro " + ticker);
+                    throw new Error("Alpha Vantage limit nebo neznámý ticker.");
                 }
             } catch (err) {
-                status.innerText = "❌ " + err.message;
-                console.error(err);
-            } finally {
-                btn.disabled = false;
+                status.innerText = "❌ Chyba: " + err.message + " (Zkuste to za minutu)";
+                status.className = "text-center text-sm mb-4 italic text-red-400 font-bold";
             }
         }
 
@@ -102,7 +102,7 @@
             const growth = parseFloat(document.getElementById('growth').value) / 100;
             const discount = parseFloat(document.getElementById('discount').value) / 100;
 
-            if (!fcf || !shares) return alert("Chybí data!");
+            if (!fcf || !shares) return;
 
             let totalPV = 0;
             let currentFCF = fcf;
@@ -121,13 +121,8 @@
             if (window.marketPrice) {
                 const diff = ((finalPrice - window.marketPrice) / window.marketPrice) * 100;
                 const mos = document.getElementById('mos');
-                if (diff > 0) {
-                    mos.innerText = "PODHODNOCENO " + diff.toFixed(1) + "%";
-                    mos.className = "text-xl font-black uppercase text-slate-900 opacity-80";
-                } else {
-                    mos.innerText = "NADHODNOCENO " + Math.abs(diff).toFixed(1) + "%";
-                    mos.className = "text-xl font-black uppercase text-red-900 opacity-80";
-                }
+                mos.innerText = (diff > 0 ? "PODHODNOCENO " : "NADHODNOCENO ") + Math.abs(diff).toFixed(1) + "%";
+                mos.className = "text-xl font-black uppercase mt-1 " + (diff > 0 ? "text-green-300" : "text-red-300");
             }
         }
     </script>

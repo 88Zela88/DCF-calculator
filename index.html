@@ -54,4 +54,125 @@
 
             <button onclick="calculateDCF()" 
                 class="w-full bg-white text-slate-900 font-black py-5 rounded-2xl hover:bg-slate-200 transition-all text-lg uppercase tracking-tight shadow-xl">
-                Spo
+                Spočítat vnitřní hodnotu
+            </button>
+        </div>
+
+        <div id="resultBox" class="hidden mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div class="bg-green-500 rounded-3xl p-8 text-slate-900 text-center shadow-2xl relative overflow-hidden">
+                <p class="font-bold uppercase tracking-widest text-xs opacity-70 mb-1">Vnitřní hodnota akcie</p>
+                <h2 id="intrinsicPrice" class="text-6xl font-900 tracking-tighter mb-4">$ --</h2>
+                
+                <div class="bg-green-600/20 rounded-2xl p-4 inline-block w-full">
+                    <p class="text-sm font-bold opacity-80">Tržní cena: <span id="mktPrice">--</span></p>
+                    <p id="mos" class="text-xl font-900 mt-1 uppercase tracking-tight"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API KLÍČ - Zkontrolovaný
+        const API_KEY = 'TDAEXfruGIrHWfxNJuP28M3GIb3xU6UD'; 
+
+        async function fetchData() {
+            const ticker = document.getElementById('ticker').value.toUpperCase().trim();
+            const status = document.getElementById('status');
+            const btn = document.getElementById('fetchBtn');
+
+            if (!ticker) {
+                status.innerText = "⚠️ Zadejte ticker";
+                status.className = "text-sm mt-3 text-center text-yellow-500 font-bold";
+                return;
+            }
+
+            status.innerText = "⏳ Načítám data z burzy...";
+            status.className = "text-sm mt-3 text-center text-blue-400 animate-pulse";
+            btn.disabled = true;
+
+            try {
+                // Endpoint 'quote' je nejspolehlivější pro free verzi
+                const response = await fetch(`https://financialmodelingprep.com/api/v3/quote/${ticker}?apikey=${API_KEY}`);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const stock = data[0];
+                    
+                    // Pokusíme se vypočítat FCF odhadem z tržní kapitalizace, 
+                    // protože endpoint pro finanční výkazy vám házel chybu.
+                    // Většina velkých US firem má FCF yield kolem 3-5%
+                    // Pro přesnost ale zkusíme načíst i cash flow endpoint
+                    const cfRes = await fetch(`https://financialmodelingprep.com/api/v3/cash-flow-statement/${ticker}?limit=1&apikey=${API_KEY}`);
+                    const cfData = await cfRes.json();
+
+                    if (cfData && cfData.length > 0) {
+                        document.getElementById('fcf').value = (cfData[0].freeCashFlow / 1000000).toFixed(2);
+                    } else {
+                        // Nouzový výpočet pokud cash flow endpoint selže
+                        status.innerText = "⚠️ Částečná data (FCF odhadnuto)";
+                        document.getElementById('fcf').value = (stock.marketCap * 0.04 / 1000000).toFixed(2);
+                    }
+
+                    document.getElementById('shares').value = (stock.sharesOutstanding / 1000000).toFixed(2);
+                    
+                    window.marketPrice = stock.price;
+                    document.getElementById('mktPrice').innerText = "$" + window.marketPrice.toFixed(2);
+
+                    status.innerText = `✅ ${stock.name} načten`;
+                    status.className = "text-sm mt-3 text-center text-green-400 font-bold";
+                } else {
+                    throw new Error("Ticker nenalezen.");
+                }
+            } catch (err) {
+                status.innerText = "❌ " + err.message;
+                status.className = "text-sm mt-3 text-center text-red-500 font-bold";
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function calculateDCF() {
+            const fcf = parseFloat(document.getElementById('fcf').value);
+            const shares = parseFloat(document.getElementById('shares').value);
+            const growth = parseFloat(document.getElementById('growth').value) / 100;
+            const discount = parseFloat(document.getElementById('discount').value) / 100;
+
+            if (!fcf || !shares) {
+                alert("Vyplňte prosím data!");
+                return;
+            }
+
+            // DCF Matematika (5 let projekce)
+            let totalPV = 0;
+            let currentFCF = fcf;
+            for (let i = 1; i <= 5; i++) {
+                currentFCF *= (1 + growth);
+                totalPV += currentFCF / Math.pow(1 + discount, i);
+            }
+
+            // Terminální hodnota (předpoklad 2% trvalý růst)
+            const terminalValue = (currentFCF * 1.02) / (discount - 0.02);
+            const terminalPV = terminalValue / Math.pow(1 + discount, 5);
+
+            const finalPrice = (totalPV + terminalPV) / shares;
+
+            // Zobrazit box
+            const resBox = document.getElementById('resultBox');
+            resBox.classList.remove('hidden');
+            document.getElementById('intrinsicPrice').innerText = "$" + finalPrice.toFixed(2);
+
+            const mosElem = document.getElementById('mos');
+            if (window.marketPrice) {
+                const diff = ((finalPrice - window.marketPrice) / window.marketPrice) * 100;
+                if (diff > 0) {
+                    mosElem.innerText = "Podhodnoceno o " + diff.toFixed(1) + "%";
+                    mosElem.className = "text-xl font-900 mt-1 uppercase tracking-tight text-slate-900";
+                } else {
+                    mosElem.innerText = "Nadhodnoceno o " + Math.abs(diff).toFixed(1) + "%";
+                    mosElem.className = "text-xl font-900 mt-1 uppercase tracking-tight text-red-800";
+                }
+            }
+        }
+    </script>
+</body>
+</html>

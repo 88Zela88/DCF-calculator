@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DCF Pro 2026 - Barevná Edice</title>
+    <title>DCF Pro 2026 - Master Hybrid</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .formula-card {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        }
-        /* Definice barev pro konzistenci */
-        .color-fcf { color: #60a5fa; } /* blue-400 */
-        .color-growth { color: #4ade80; } /* green-400 */
-        .color-discount { color: #f87171; } /* red-400 */
-        .color-shares { color: #fbbf24; } /* amber-400 */
+        .formula-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+        .color-fcf { color: #60a5fa; }
+        .color-growth { color: #4ade80; }
+        .color-discount { color: #f87171; }
+        .color-shares { color: #fbbf24; }
+        .manual-box { background: rgba(15, 23, 42, 0.6); border: 1px dashed #334155; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
@@ -26,7 +24,7 @@
             </h1>
             
             <div class="flex gap-2 mb-4">
-                <input type="text" id="ticker" placeholder="SYMBOL" 
+                <input type="text" id="ticker" placeholder="SYMBOL (AAPL, MSFT...)" 
                     class="flex-1 bg-slate-950 border-2 border-slate-700 p-4 rounded-2xl uppercase focus:border-blue-500 outline-none font-bold text-xl">
                 <button onclick="fetchData()" id="fetchBtn" 
                     class="bg-blue-600 hover:bg-blue-500 px-8 py-4 rounded-2xl font-black transition-all active:scale-95 shadow-lg text-white">
@@ -35,7 +33,7 @@
             </div>
             <p id="status" class="text-xs text-center text-slate-500 mb-8 h-4 italic font-mono"></p>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-left">
                 <div class="bg-slate-950 p-4 rounded-2xl border-l-4 border-blue-500">
                     <label class="text-[10px] uppercase font-black text-blue-400 tracking-widest">Free Cash Flow (mil. $)</label>
                     <input type="number" id="fcf" class="w-full bg-transparent text-2xl font-bold outline-none text-white mt-1">
@@ -45,11 +43,11 @@
                     <input type="number" id="shares" class="w-full bg-transparent text-2xl font-bold outline-none text-white mt-1">
                 </div>
                 <div class="bg-slate-950 p-4 rounded-2xl border-l-4 border-green-400">
-                    <label class="text-[10px] uppercase font-black text-green-400 tracking-widest italic">Předpokládaný růst (%)</label>
+                    <label class="text-[10px] uppercase font-black text-green-400 tracking-widest">Předpokládaný růst (%)</label>
                     <input type="number" id="growth" value="10" class="w-full bg-transparent text-2xl font-bold outline-none text-green-400 mt-1">
                 </div>
                 <div class="bg-slate-950 p-4 rounded-2xl border-l-4 border-red-400">
-                    <label class="text-[10px] uppercase font-black text-red-400 tracking-widest italic">Diskontní sazba / WACC (%)</label>
+                    <label class="text-[10px] uppercase font-black text-red-400 tracking-widest">Diskontní sazba (%)</label>
                     <input type="number" id="discount" value="8" class="w-full bg-transparent text-2xl font-bold outline-none text-red-400 mt-1">
                 </div>
             </div>
@@ -60,71 +58,79 @@
 
             <div id="resultBox" class="hidden mt-8 animate-in fade-in zoom-in duration-500">
                 <div class="bg-blue-600 rounded-3xl p-8 text-white text-center shadow-2xl">
-                    <p class="text-[10px] font-bold uppercase opacity-70 tracking-[0.2em] mb-2">Výsledná vnitřní hodnota:</p>
+                    <p class="text-[10px] font-bold uppercase opacity-70 tracking-[0.2em] mb-2 text-white">Výsledná vnitřní hodnota:</p>
                     <h2 id="intrinsicPrice" class="text-6xl font-black mb-4">--</h2>
                     <div class="bg-blue-700/40 p-4 rounded-2xl">
-                        <p class="text-sm opacity-90">Aktuální cena na trhu: <span id="mktPrice" class="font-bold">--</span></p>
+                        <p class="text-sm opacity-90 text-white font-bold">Aktuální cena na trhu: <span id="mktPrice">--</span></p>
                         <p id="mos" class="text-2xl font-black uppercase tracking-tighter mt-1"></p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="formula-card rounded-3xl p-8 border border-slate-700 mb-8 shadow-xl relative overflow-hidden">
-            <h2 class="text-xl font-black text-white mb-8 uppercase tracking-tight flex items-center gap-3">
-                <span class="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-[0_0_15px_rgba(59,130,246,0.5)]">?</span>
-                Jak vzniká výsledek?
+        <div class="manual-box rounded-3xl p-6 mb-8 border border-slate-700">
+            <h2 class="text-sm font-black text-white mb-6 uppercase flex items-center gap-2">
+                <span class="text-yellow-500">➔</span> Jak doplnit data ručně (Yahoo Finance)
             </h2>
-
-            <div class="bg-slate-900/80 p-8 rounded-2xl border border-slate-800 mb-8">
-                <div class="text-xl md:text-3xl text-center py-6 leading-relaxed">
-                    $$ \text{Value} = \sum_{t=1}^{5} \frac{\color{#60a5fa}{FCF} \cdot (1 + \color{#4ade80}{g})^t}{(1 + \color{#f87171}{r})^t} + \frac{\text{Terminal Value}}{\color{#fbbf24}{\text{Shares}}} $$
-                </div>
-                
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8 pt-8 border-t border-slate-800">
-                    <div class="text-center">
-                        <span class="block text-2xl font-black color-fcf">FCF</span>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Peníze firmy</span>
-                    </div>
-                    <div class="text-center">
-                        <span class="block text-2xl font-black color-growth">g</span>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Tempo růstu</span>
-                    </div>
-                    <div class="text-center">
-                        <span class="block text-2xl font-black color-discount">r</span>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Cena rizika</span>
-                    </div>
-                    <div class="text-center">
-                        <span class="block text-2xl font-black color-shares">Shares</span>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Počet dílků</span>
-                    </div>
-                </div>
+            
+            <div id="quickLinks" class="mb-6 flex flex-wrap gap-3">
+                <p class="text-xs text-slate-400 w-full mb-1">Přímé odkazy pro zadaný ticker:</p>
+                <a id="linkCF" href="https://finance.yahoo.com" target="_blank" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-[10px] font-bold transition">CASH FLOW ↗</a>
+                <a id="linkStats" href="https://finance.yahoo.com" target="_blank" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-[10px] font-bold transition">STATISTIKY ↗</a>
             </div>
 
-            <div class="flex flex-col md:flex-row gap-6 items-center">
-                <div class="flex-1 space-y-4">
-                    <p class="text-sm text-slate-300 leading-relaxed">
-                        Matematika <b class="color-fcf">DCF</b> je jednoduchá: vezmeme peníze, které firma vydělá v budoucnu, zvýšíme je o <b class="color-growth">růst</b> a poté je zmenšíme o <b class="color-discount">diskont</b> (protože budoucí peníze mají dnes menší hodnotu). Nakonec vše sečteme a podělíme <b class="color-shares">počtem akcií</b>.
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                    <p class="color-fcf font-black text-[10px] uppercase mb-2">1. Najděte Free Cash Flow</p>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Na kartě <b class="text-slate-200">Financials > Cash Flow</b> sjeďte úplně dolů. Najděte řádek <b class="text-white font-bold underline italic">Free Cash Flow</b> a opište číslo ze sloupce <b class="text-slate-200">TTM</b>.
                     </p>
+                </div>
+                <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                    <p class="color-shares font-black text-[10px] uppercase mb-2">2. Najděte počet akcií</p>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Na kartě <b class="text-slate-200">Statistics</b> hledejte v sekci <i class="text-slate-500 italic">Share Statistics</i> položku <b class="text-white font-bold underline italic">Shares Outstanding</b>.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="formula-card rounded-3xl p-8 border border-slate-700 mb-8 shadow-xl">
+            <h2 class="text-xl font-black text-white mb-8 uppercase tracking-tight flex items-center gap-3">
+                <span class="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">?</span>
+                Jak vzniká výsledek?
+            </h2>
+            <div class="bg-slate-900/80 p-8 rounded-2xl border border-slate-800">
+                <div class="text-xl md:text-3xl text-center py-6 leading-relaxed">
+                    $$ \text{Value} = \sum_{t=1}^{5} \frac{\color{#60a5fa}{FCF} \cdot (1 + \color{#4ade80}{g})^t}{(1 + \color{#f87171}{r})^t} + \frac{\text{Terminal Value}}{\color{#fbbf24}{\text{Shares}}} $$
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // ... (Zde zůstává stejná logika fetchData a calculateDCF jako v předchozím kódu)
         const API_KEY = 'VLOZ_SEM_KLIC'; 
+
+        function updateLinks(ticker) {
+            if(!ticker) return;
+            document.getElementById('linkCF').href = `https://finance.yahoo.com/quote/${ticker}/cash-flow`;
+            document.getElementById('linkStats').href = `https://finance.yahoo.com/quote/${ticker}/key-statistics`;
+        }
 
         async function fetchData() {
             const ticker = document.getElementById('ticker').value.toUpperCase().trim();
             const status = document.getElementById('status');
             if (!ticker) return;
+            
+            updateLinks(ticker);
             status.innerText = "⏳ Načítám z Alpha Vantage...";
+            
             try {
                 const res = await fetch(`https://www.alphavantage.co/query?function=OVERVIEW&symbol=${ticker}&apikey=${API_KEY}`);
                 const data = await res.json();
                 if (data.Note) throw new Error("API Limit vyčerpán.");
                 if (!data.Symbol) throw new Error("Ticker nenalezen.");
+
                 document.getElementById('shares').value = (parseFloat(data.SharesOutstanding) / 1000000).toFixed(2);
                 
                 const qRes = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${API_KEY}`);
@@ -155,7 +161,10 @@
             const growth = parseFloat(document.getElementById('growth').value) / 100;
             const discount = parseFloat(document.getElementById('discount').value) / 100;
 
-            if (!fcf || !shares) return;
+            if (!fcf || !shares) {
+                alert("Doplňte prosím modré (FCF) a žluté (Akcie) pole.");
+                return;
+            }
 
             let totalPV = 0;
             let currentFCF = fcf;

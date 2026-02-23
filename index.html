@@ -3,20 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DCF Pro - Hybridní Kalkulačka</title>
+    <title>DCF Pro 2026 - Master Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .formula-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+        .timeline-dot::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: -20px;
+            width: 2px;
+            height: 20px;
+            background: #334155;
+        }
+    </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
 
-    <div class="max-w-2xl mx-auto">
-        <div class="bg-slate-800 rounded-3xl p-8 shadow-2xl border border-slate-700 mb-8">
-            <h1 class="text-3xl font-black text-center text-blue-400 mb-8 tracking-tighter uppercase">Stock Valuation Pro</h1>
+    <div class="max-w-3xl mx-auto">
+        
+        <div class="bg-slate-800 rounded-3xl p-6 md:p-10 shadow-2xl border border-slate-700 mb-8">
+            <h1 class="text-3xl font-black text-center text-blue-400 mb-8 tracking-tighter uppercase italic">Intrinsicator 3000</h1>
             
             <div class="flex gap-2 mb-4">
-                <input type="text" id="ticker" placeholder="SYMBOL (např. AAPL)" 
+                <input type="text" id="ticker" placeholder="SYMBOL" 
                     class="flex-1 bg-slate-950 border-2 border-slate-700 p-4 rounded-2xl uppercase focus:border-blue-500 outline-none font-bold text-xl">
                 <button onclick="fetchData()" id="fetchBtn" 
-                    class="bg-blue-600 hover:bg-blue-500 px-8 py-4 rounded-2xl font-black transition-all active:scale-95 shadow-lg shadow-blue-900/40 text-white">
+                    class="bg-blue-600 hover:bg-blue-500 px-8 py-4 rounded-2xl font-black transition-all active:scale-95 shadow-lg text-white">
                     AUTO
                 </button>
             </div>
@@ -25,28 +40,28 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div class="bg-slate-950 p-4 rounded-2xl border border-slate-700">
                     <label class="text-[10px] uppercase font-black text-slate-500 tracking-widest">Free Cash Flow (mil. $)</label>
-                    <input type="number" id="fcf" placeholder="Např. 15000" class="w-full bg-transparent text-2xl font-bold outline-none text-white mt-1">
+                    <input type="number" id="fcf" class="w-full bg-transparent text-2xl font-bold outline-none text-white mt-1">
                 </div>
                 <div class="bg-slate-950 p-4 rounded-2xl border border-slate-700">
                     <label class="text-[10px] uppercase font-black text-slate-500 tracking-widest">Počet akcií (mil.)</label>
-                    <input type="number" id="shares" placeholder="Např. 450" class="w-full bg-transparent text-2xl font-bold outline-none text-white mt-1">
+                    <input type="number" id="shares" class="w-full bg-transparent text-2xl font-bold outline-none text-white mt-1">
                 </div>
                 <div class="bg-slate-950 p-4 rounded-2xl border border-slate-700">
-                    <label class="text-[10px] uppercase font-black text-slate-500 tracking-widest text-green-500">Očekávaný růst (%)</label>
+                    <label class="text-[10px] uppercase font-black text-slate-500 tracking-widest text-green-500">Růst (Growth %)</label>
                     <input type="number" id="growth" value="10" class="w-full bg-transparent text-2xl font-bold outline-none text-green-400 mt-1">
                 </div>
                 <div class="bg-slate-950 p-4 rounded-2xl border border-slate-700">
-                    <label class="text-[10px] uppercase font-black text-slate-500 tracking-widest text-red-500">Požadovaná výnosnost (%)</label>
+                    <label class="text-[10px] uppercase font-black text-slate-500 tracking-widest text-red-500">Diskont (WACC %)</label>
                     <input type="number" id="discount" value="8" class="w-full bg-transparent text-2xl font-bold outline-none text-red-400 mt-1">
                 </div>
             </div>
 
-            <button onclick="calculateDCF()" class="w-full bg-white text-slate-950 font-black py-5 rounded-2xl hover:bg-slate-200 transition-all text-xl uppercase tracking-tighter shadow-xl">
-                Vypočítat vnitřní hodnotu
+            <button onclick="calculateDCF()" class="w-full bg-white text-slate-950 font-black py-6 rounded-2xl hover:bg-slate-200 transition-all text-xl uppercase tracking-widest shadow-xl">
+                Vypočítat férovou cenu
             </button>
 
-            <div id="resultBox" class="hidden mt-8 animate-in fade-in duration-500">
-                <div class="bg-blue-600 rounded-3xl p-8 text-white text-center shadow-2xl relative overflow-hidden">
+            <div id="resultBox" class="hidden mt-8 animate-in fade-in zoom-in duration-500">
+                <div class="bg-blue-600 rounded-3xl p-8 text-white text-center shadow-2xl">
                     <p class="text-[10px] font-bold uppercase opacity-70 tracking-[0.2em] mb-2">Vnitřní hodnota na akcii:</p>
                     <h2 id="intrinsicPrice" class="text-6xl font-black mb-4">--</h2>
                     <div class="bg-blue-700/40 p-4 rounded-2xl">
@@ -57,21 +72,60 @@
             </div>
         </div>
 
-        <div class="bg-slate-800/50 rounded-3xl p-6 border border-slate-700/50">
-            <h3 class="text-sm font-black uppercase text-slate-400 mb-4 flex items-center gap-2">
-                <span class="w-2 h-2 bg-yellow-500 rounded-full"></span> 
-                Jak najít data ručně (když API stávkuje)
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                <div class="bg-slate-900 p-4 rounded-xl">
-                    <p class="font-bold text-blue-400 mb-1 uppercase">1. Free Cash Flow</p>
-                    <p class="text-slate-500">Yahoo Finance -> <span class="text-slate-300 italic">Financials</span> -> <span class="text-slate-300 italic">Cash Flow</span> -> řádek <span class="text-white">Free Cash Flow</span> (úplně dole, sloupec TTM).</p>
+        <div class="formula-card rounded-3xl p-8 border border-slate-700 mb-8 shadow-xl">
+            <h2 class="text-xl font-black text-white mb-6 uppercase tracking-tight flex items-center gap-3">
+                <span class="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">?</span>
+                Jak funguje výpočet v pozadí?
+            </h2>
+
+            <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 mb-8 overflow-x-auto">
+                <p class="text-slate-400 text-xs font-bold uppercase mb-4 text-center">Zjednodušený DCF vzorec:</p>
+                <div class="text-xl md:text-2xl text-center font-serif py-4">
+                    $$Intrinsic Value = \sum_{t=1}^{n} \frac{FCF_t}{(1 + r)^t} + \frac{Terminal Value}{(1 + r)^n}$$
                 </div>
-                <div class="bg-slate-900 p-4 rounded-xl">
-                    <p class="font-bold text-blue-400 mb-1 uppercase">2. Počet akcií</p>
-                    <p class="text-slate-500">Yahoo Finance -> <span class="text-slate-300 italic">Statistics</span> -> řádek <span class="text-white">Shares Outstanding</span>.</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 text-[10px] uppercase font-bold text-slate-500">
+                    <div class="text-center"><span class="text-blue-400 block text-lg">FCF</span> Tok peněz</div>
+                    <div class="text-center"><span class="text-green-400 block text-lg">r</span> Diskont (Sleva)</div>
+                    <div class="text-center"><span class="text-yellow-400 block text-lg">t</span> Roky</div>
+                    <div class="text-center"><span class="text-purple-400 block text-lg">n</span> Poslední rok</div>
                 </div>
             </div>
+
+            <div class="relative pt-10 pb-4">
+                <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-700 -translate-y-1/2 rounded-full"></div>
+                <div class="grid grid-cols-5 relative z-10">
+                    <div class="text-center group">
+                        <div class="w-4 h-4 bg-blue-500 rounded-full mx-auto mb-2 shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+                        <p class="text-[10px] font-black text-slate-300">ROK 1</p>
+                        <p class="text-[9px] text-slate-500">Odhad FCF</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-4 h-4 bg-blue-500 rounded-full mx-auto mb-2 opacity-80"></div>
+                        <p class="text-[10px] font-black text-slate-300 uppercase">...</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-4 h-4 bg-blue-500 rounded-full mx-auto mb-2 opacity-60"></div>
+                        <p class="text-[10px] font-black text-slate-300 uppercase">ROK 5</p>
+                        <p class="text-[9px] text-slate-500">Konec projekce</p>
+                    </div>
+                    <div class="text-center col-span-2">
+                        <div class="w-4 h-4 bg-purple-500 rounded-full mx-auto mb-2 shadow-[0_0_15px_rgba(168,85,247,0.5)]"></div>
+                        <p class="text-[10px] font-black text-purple-400">TERMINÁLNÍ HODNOTA</p>
+                        <p class="text-[9px] text-slate-500 italic">Všechny roky až do nekonečna</p>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="mt-8 text-sm text-slate-400 leading-relaxed bg-slate-900/30 p-4 rounded-xl italic">
+                "Představte si, že vám někdo slíbí 1000 Kč za 5 let. Dnes pro vás mají menší hodnotu (třeba 700 Kč), protože byste těch 700 Kč mohli investovat jinde. My děláme to samé s firmou – odhadneme zisky v budoucnu a 'přetáhneme' je na dnešní hodnotu."
+            </p>
+        </div>
+
+        <div class="text-center pb-10">
+            <p class="text-slate-500 text-xs uppercase font-bold tracking-widest mb-4">Nedaří se načíst data?</p>
+            <a href="https://finance.yahoo.com" target="_blank" class="inline-flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-xl text-xs font-bold hover:bg-slate-700 transition">
+                Otevřít Yahoo Finance ↗
+            </a>
         </div>
     </div>
 
@@ -82,21 +136,14 @@
             const ticker = document.getElementById('ticker').value.toUpperCase().trim();
             const status = document.getElementById('status');
             if (!ticker) return;
-
-            status.innerText = "⏳ Načítám data z Alpha Vantage...";
-            status.className = "text-xs text-center text-blue-400 mb-8 h-4 italic font-mono";
-
+            status.innerText = "⏳ Načítám z Alpha Vantage...";
             try {
-                // 1. Základní data a počet akcií
-                const overviewRes = await fetch(`https://www.alphavantage.co/query?function=OVERVIEW&symbol=${ticker}&apikey=${API_KEY}`);
-                const oData = await overviewRes.json();
-
-                if (oData.Note) throw new Error("API Limit (25/den) vyčerpán.");
-                if (!oData.Symbol) throw new Error("Ticker nenalezen.");
-
-                document.getElementById('shares').value = (parseFloat(oData.SharesOutstanding) / 1000000).toFixed(2);
+                const res = await fetch(`https://www.alphavantage.co/query?function=OVERVIEW&symbol=${ticker}&apikey=${API_KEY}`);
+                const data = await res.json();
+                if (data.Note) throw new Error("Limit vyčerpán.");
+                if (!data.Symbol) throw new Error("Ticker nenalezen.");
+                document.getElementById('shares').value = (parseFloat(data.SharesOutstanding) / 1000000).toFixed(2);
                 
-                // 2. Cena
                 const qRes = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${API_KEY}`);
                 const qData = await qRes.json();
                 if (qData["Global Quote"]) {
@@ -104,22 +151,18 @@
                     document.getElementById('mktPrice').innerText = "$" + window.marketPrice.toFixed(2);
                 }
 
-                // 3. Cash Flow
                 const cfRes = await fetch(`https://www.alphavantage.co/query?function=CASH_FLOW&symbol=${ticker}&apikey=${API_KEY}`);
                 const cfData = await cfRes.json();
-                
                 if (cfData.annualReports) {
                     const last = cfData.annualReports[0];
                     const fcf = parseFloat(last.operatingCashflow) - parseFloat(last.capitalExpenditures);
                     document.getElementById('fcf').value = (fcf / 1000000).toFixed(2);
-                    status.innerText = "✅ Všechna data načtena automaticky.";
+                    status.innerText = "✅ Data načtena.";
                 } else {
-                    status.innerText = "⚠️ Částečná data. Doplňte FCF ručně z tabulky níže.";
+                    status.innerText = "⚠️ Doplňte FCF ručně.";
                 }
-
             } catch (err) {
-                status.innerText = "❌ " + err.message + ". Zadejte data ručně.";
-                status.className = "text-xs text-center text-red-400 mb-8 h-4 italic font-mono";
+                status.innerText = "❌ " + err.message;
             }
         }
 
@@ -129,10 +172,7 @@
             const growth = parseFloat(document.getElementById('growth').value) / 100;
             const discount = parseFloat(document.getElementById('discount').value) / 100;
 
-            if (!fcf || !shares) {
-                alert("Prosím zadejte FCF a Počet akcií (ručně nebo přes AUTO).");
-                return;
-            }
+            if (!fcf || !shares) return;
 
             let totalPV = 0;
             let currentFCF = fcf;
@@ -150,10 +190,13 @@
             if (window.marketPrice) {
                 const diff = ((finalPrice - window.marketPrice) / window.marketPrice) * 100;
                 const mos = document.getElementById('mos');
-                mos.innerText = (diff > 0 ? "Podhodnoceno o " : "Nadhodnoceno o ") + Math.abs(diff).toFixed(1) + "%";
+                mos.innerText = (diff > 0 ? "Podhodnoceno " : "Nadhodnoceno ") + Math.abs(diff).toFixed(1) + "%";
                 mos.className = "text-2xl font-black mt-1 uppercase tracking-tighter " + (diff > 0 ? "text-green-300" : "text-red-300");
             }
         }
     </script>
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </body>
 </html>

@@ -2,60 +2,72 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <title>DCF Kalkulačka - Stabilní verze</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profesionální DCF Kalkulačka</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 p-5">
-    <div class="max-w-xl mx-auto bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
-        <h1 class="text-2xl font-bold mb-6 text-center text-slate-800">DCF Kalkulačka</h1>
+<body class="bg-gray-100 p-4 md:p-10 font-sans text-slate-900">
+
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-3xl shadow-2xl border border-gray-100">
+        <h1 class="text-3xl font-black mb-2 text-center text-slate-800 tracking-tight">DCF Analyzer</h1>
+        <p class="text-center text-slate-500 mb-8 text-sm uppercase font-bold tracking-widest">Vnitřní hodnota akcie</p>
         
-        <div class="space-y-4">
-            <div class="flex gap-2">
-                <input type="text" id="ticker" placeholder="Ticker (např. AAPL)" class="flex-1 border-2 border-gray-200 p-3 rounded-xl uppercase focus:border-blue-500 outline-none transition">
-                <button onclick="fetchData()" id="fetchBtn" class="bg-slate-800 text-white px-6 py-3 rounded-xl hover:bg-slate-700 transition font-semibold">
-                    Načíst data
-                </button>
-            </div>
-            <p id="status" class="text-sm text-center text-gray-500 italic"></p>
-
-            <hr class="my-6">
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="col-span-2">
-                    <label class="text-xs font-bold text-gray-500 uppercase">Free Cash Flow (v milionech $)</label>
-                    <input type="number" id="fcf" step="any" class="w-full border-2 border-gray-100 p-3 rounded-xl mt-1 bg-gray-50">
+        <div class="space-y-6">
+            <div class="flex flex-col space-y-2">
+                <label class="text-xs font-black text-slate-400 uppercase ml-1">Zadejte Ticker (US burzy)</label>
+                <div class="flex gap-2">
+                    <input type="text" id="ticker" placeholder="Např. AAPL, MSFT, NVDA" 
+                        class="flex-1 border-2 border-slate-100 p-4 rounded-2xl uppercase focus:border-blue-500 outline-none transition-all font-bold text-lg shadow-sm">
+                    <button onclick="fetchData()" id="fetchBtn" 
+                        class="bg-slate-900 text-white px-8 py-4 rounded-2xl hover:bg-slate-700 transition-all font-bold shadow-lg active:scale-95">
+                        Načíst data
+                    </button>
                 </div>
-                <div class="col-span-2">
-                    <label class="text-xs font-bold text-gray-500 uppercase">Počet akcií v oběhu (v milionech)</label>
-                    <input type="number" id="shares" step="any" class="w-full border-2 border-gray-100 p-3 rounded-xl mt-1 bg-gray-50">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase">Růst (Growth %)</label>
-                    <input type="number" id="growth" value="10" class="w-full border-2 border-gray-100 p-3 rounded-xl mt-1">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase">Sleva (WACC %)</label>
-                    <input type="number" id="discount" value="8" class="w-full border-2 border-gray-100 p-3 rounded-xl mt-1">
-                </div>
+                <p id="status" class="text-sm text-center italic text-slate-400 min-h-[20px]"></p>
             </div>
 
-            <button onclick="calculateDCF()" class="w-full bg-green-500 text-white font-bold py-4 rounded-xl hover:bg-green-600 shadow-lg shadow-green-100 transition mt-4">
-                SPOČÍTAT HODNOTU
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                <div class="flex flex-col">
+                    <label class="text-xs font-black text-slate-400 uppercase mb-1">Free Cash Flow (Mil. $)</label>
+                    <input type="number" id="fcf" step="any" class="border-2 border-white p-3 rounded-xl shadow-sm outline-none focus:border-blue-300 transition-all">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-xs font-black text-slate-400 uppercase mb-1">Počet akcií (Mil.)</label>
+                    <input type="number" id="shares" step="any" class="border-2 border-white p-3 rounded-xl shadow-sm outline-none focus:border-blue-300 transition-all">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-xs font-black text-slate-400 uppercase mb-1">Růst 1-5 let (%)</label>
+                    <input type="number" id="growth" value="10" class="border-2 border-white p-3 rounded-xl shadow-sm outline-none focus:border-blue-300 transition-all font-bold text-blue-600">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-xs font-black text-slate-400 uppercase mb-1">Diskontní sazba (%)</label>
+                    <input type="number" id="discount" value="8" class="border-2 border-white p-3 rounded-xl shadow-sm outline-none focus:border-blue-300 transition-all font-bold text-red-500">
+                </div>
+            </div>
+
+            <button onclick="calculateDCF()" 
+                class="w-full bg-green-500 text-white font-black py-5 rounded-2xl hover:bg-green-600 shadow-xl shadow-green-100 transition-all text-xl uppercase tracking-tighter">
+                Vypočítat férovou cenu
             </button>
 
-            <div id="resultBox" class="mt-6 p-6 bg-slate-50 rounded-2xl hidden border border-slate-200">
-                <p class="text-slate-500 text-sm uppercase font-bold tracking-wider">Vnitřní hodnota na akcii:</p>
-                <h2 id="intrinsicPrice" class="text-4xl font-black text-slate-900 mt-1">--</h2>
-                <div id="analysis" class="mt-4 pt-4 border-t border-slate-200 text-sm">
-                    <p>Aktuální tržní cena: <span id="mktPrice" class="font-bold">--</span></p>
-                    <p id="mos" class="mt-1 font-bold"></p>
+            <div id="resultBox" class="hidden animate-in fade-in zoom-in duration-300">
+                <div class="bg-slate-900 text-white p-8 rounded-3xl text-center shadow-2xl relative overflow-hidden">
+                    <div class="relative z-10">
+                        <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Odhadovaná vnitřní hodnota:</p>
+                        <h2 id="intrinsicPrice" class="text-5xl font-black mb-4">--</h2>
+                        <div id="analysis" class="pt-4 border-t border-slate-700 mt-4 space-y-1">
+                            <p class="text-sm">Tržní cena nyní: <span id="mktPrice" class="font-bold">--</span></p>
+                            <p id="mos" class="text-lg font-black"></p>
+                        </div>
+                    </div>
+                    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-green-500 opacity-10 rounded-full"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Klíč je správný, prověřil jsem ho.
+        // TVŮJ API KLÍČ
         const API_KEY = 'TDAEXfruGIrHWfxNJuP28M3GIb3xU6UD'; 
 
         async function fetchData() {
@@ -64,42 +76,45 @@
             const btn = document.getElementById('fetchBtn');
 
             if (!ticker) {
-                alert('Prosím zadejte ticker (např. MSFT)');
+                status.innerText = "❌ Zadejte prosím ticker";
                 return;
             }
 
-            status.innerText = "Hledám data...";
-            status.className = "text-sm text-center text-blue-500 italic";
+            status.innerText = "⌛ Připojování k serveru...";
+            status.className = "text-sm text-center italic text-blue-500";
             btn.disabled = true;
 
             try {
-                // Taháme data z "Financial Statements"
-                const url = `https://financialmodelingprep.com/api/v3/cash-flow-statement/${ticker}?limit=1&apikey=${API_KEY}`;
-                const res = await fetch(url);
-                const cfData = await res.json();
-
-                // Taháme data z "Quote" (cena a akcie)
-                const quoteUrl = `https://financialmodelingprep.com/api/v3/quote/${ticker}?apikey=${API_KEY}`;
-                const qRes = await fetch(quoteUrl);
+                // 1. Získání aktuální ceny a akcií (Quote)
+                const qRes = await fetch(`https://financialmodelingprep.com/api/v3/quote/${ticker}?apikey=${API_KEY}`);
                 const qData = await qRes.json();
 
-                if (cfData && cfData.length > 0 && qData && qData.length > 0) {
-                    // Vyplníme políčka
+                if (!qData || qData.length === 0) {
+                    throw new Error("Ticker " + ticker + " nebyl nalezen.");
+                }
+
+                // 2. Získání Cash Flow (Roční)
+                const cfRes = await fetch(`https://financialmodelingprep.com/api/v3/cash-flow-statement/${ticker}?limit=1&apikey=${API_KEY}`);
+                const cfData = await cfRes.json();
+
+                if (cfData && cfData.length > 0) {
+                    // Úspěšné naplnění políček
                     document.getElementById('fcf').value = (cfData[0].freeCashFlow / 1000000).toFixed(2);
                     document.getElementById('shares').value = (qData[0].sharesOutstanding / 1000000).toFixed(2);
                     
-                    // Uložíme tržní cenu
                     window.marketPrice = qData[0].price;
                     document.getElementById('mktPrice').innerText = "$" + window.marketPrice.toFixed(2);
 
-                    status.innerText = "Data pro " + ticker + " načtena ✅";
-                    status.className = "text-sm text-center text-green-600 font-medium";
+                    status.innerText = "✅ Data pro " + ticker + " načtena";
+                    status.className = "text-sm text-center text-green-600 font-bold uppercase tracking-tighter";
                 } else {
-                    throw new Error("Ticker nenalezen nebo chybí data.");
+                    throw new Error("Pro tento ticker chybí finanční výkazy.");
                 }
+
             } catch (err) {
                 status.innerText = "Chyba: " + err.message;
-                status.className = "text-sm text-center text-red-500 font-medium";
+                status.className = "text-sm text-center text-red-500 font-bold";
+                console.error(err);
             } finally {
                 btn.disabled = false;
             }
@@ -112,39 +127,48 @@
             const discount = parseFloat(document.getElementById('discount').value) / 100;
 
             if (!fcf || !shares) {
-                alert("Nejdříve načtěte data pomocí tlačítka!");
+                alert("Načtěte nejdříve data přes tlačítko 'Načíst data'");
                 return;
             }
 
-            // DCF Matematika (5 let)
+            // --- VZOREC DCF (Gordonův model) ---
             let totalPV = 0;
-            let currentFCF = fcf;
+            let projectedFCF = fcf;
+
+            // 1. Suma současné hodnoty pro prvních 5 let
             for (let i = 1; i <= 5; i++) {
-                currentFCF *= (1 + growth);
-                totalPV += currentFCF / Math.pow(1 + discount, i);
+                projectedFCF *= (1 + growth);
+                let pv = projectedFCF / Math.pow(1 + discount, i);
+                totalPV += pv;
             }
 
-            // Terminální hodnota (Growth 2%)
-            const terminalValue = (currentFCF * 1.02) / (discount - 0.02);
+            // 2. Terminální hodnota (předpoklad nekonečného růstu 2%)
+            const terminalGrowth = 0.02;
+            const terminalValue = (projectedFCF * (1 + terminalGrowth)) / (discount - terminalGrowth);
             const terminalPV = terminalValue / Math.pow(1 + discount, 5);
 
-            const finalIntrinsicValue = (totalPV + terminalPV) / shares;
+            // 3. Celková férová cena na akcii
+            const intrinsicValuePerShare = (totalPV + terminalPV) / shares;
 
-            // Zobrazení
+            // ZOBRAZENÍ VÝSLEDKŮ
             document.getElementById('resultBox').classList.remove('hidden');
-            document.getElementById('intrinsicPrice').innerText = "$" + finalIntrinsicValue.toFixed(2);
+            document.getElementById('intrinsicPrice').innerText = "$" + intrinsicValuePerShare.toFixed(2);
 
             const mosElem = document.getElementById('mos');
             if (window.marketPrice) {
-                const diff = ((finalIntrinsicValue - window.marketPrice) / window.marketPrice) * 100;
-                if (diff > 0) {
-                    mosElem.innerText = "Podhodnoceno o " + diff.toFixed(1) + "%";
-                    mosElem.className = "mt-1 font-bold text-green-600";
+                const upside = ((intrinsicValuePerShare - window.marketPrice) / window.marketPrice) * 100;
+                
+                if (upside > 0) {
+                    mosElem.innerText = "POTENCIÁL: +" + upside.toFixed(1) + "%";
+                    mosElem.className = "text-lg font-black text-green-400";
                 } else {
-                    mosElem.innerText = "Nadhodnoceno o " + Math.abs(diff).toFixed(1) + "%";
-                    mosElem.className = "mt-1 font-bold text-red-600";
+                    mosElem.innerText = "NADHODNOCENO: " + Math.abs(upside).toFixed(1) + "%";
+                    mosElem.className = "text-lg font-black text-red-400";
                 }
             }
+            
+            // Scroll dolů k výsledku
+            document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth' });
         }
     </script>
 </body>

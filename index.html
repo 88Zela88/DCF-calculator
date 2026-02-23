@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investiční Dashboard - DCF Kalkulačka</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans p-6">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-10 flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-green-400">📊 Můj Finanční Dashboard</h1>
+            <button id="loginBtn" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">Přihlásit se</button>
+        </header>
+
+        <section class="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700">
+            <h2 class="text-xl font-semibold mb-6">Výpočet vnitřní hodnoty (DCF)</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm text-gray-400">Aktuální Free Cash Flow ($)</label>
+                    <input type="number" id="fcf" value="1000" class="w-full bg-gray-700 border-none rounded p-2 mt-1 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400">Očekávaný růst (Growth Rate %)</label>
+                    <input type="number" id="growth" value="10" class="w-full bg-gray-700 border-none rounded p-2 mt-1">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400">Diskontní sazba (WACC %)</label>
+                    <input type="number" id="wacc" value="8" class="w-full bg-gray-700 border-none rounded p-2 mt-1">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400">Terminální růst (%)</label>
+                    <input type="number" id="terminal" value="2" class="w-full bg-gray-700 border-none rounded p-2 mt-1">
+                </div>
+            </div>
+
+            <button onclick="runDCF()" class="w-full mt-8 bg-green-500 hover:bg-green-600 text-gray-900 font-bold py-3 rounded-lg transition">
+                Vypočítat a Uložit
+            </button>
+
+            <div id="result" class="mt-8 p-6 bg-gray-700 rounded-lg hidden">
+                <p class="text-gray-300">Vnitřní hodnota (Intrinsic Value):</p>
+                <h3 id="finalValue" class="text-4xl font-bold text-white">$ 0.00</h3>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // --- KONFIGURACE SUPABASE ---
+        // Zde doplníte údaje ze svého projektu v Supabase (Settings -> API)
+        const SUPABASE_URL = 'VAŠE_SUPABASE_URL';
+        const SUPABASE_KEY = 'VÁŠ_ANON_KEY';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function runDCF() {
+            const fcf = parseFloat(document.getElementById('fcf').value);
+            const growth = parseFloat(document.getElementById('growth').value) / 100;
+            const wacc = parseFloat(document.getElementById('wacc').value) / 100;
+            const terminal = parseFloat(document.getElementById('terminal').value) / 100;
+
+            let totalPV = 0;
+            let currentFCF = fcf;
+
+            // Projekce na 5 let
+            for (let i = 1; i <= 5; i++) {
+                currentFCF *= (1 + growth);
+                let pv = currentFCF / Math.pow(1 + wacc, i);
+                totalPV += pv;
+            }
+
+            // Terminální hodnota (Gordon Growth Model)
+            let tv = (currentFCF * (1 + terminal)) / (wacc - terminal);
+            let tvPV = tv / Math.pow(1 + wacc, 5);
+            
+            let intrinsicValue = totalPV + tvPV;
+
+            // Zobrazení výsledku
+            document.getElementById('result').classList.remove('hidden');
+            document.getElementById('finalValue').innerText = '$ ' + intrinsicValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            // LOGIKA PRO SUPABASE (Zápis do DB)
+            saveToSupabase(intrinsicValue);
+        }
+
+        async function saveToSupabase(value) {
+            const { data, error } = await supabase
+                .from('valuations')
+                .insert([{ intrinsic_value: value, created_at: new Date() }]);
+            
+            if (error) console.error('Chyba při ukládání:', error);
+            else alert('Výpočet byl úspěšně uložen do vaší databáze!');
+        }
+    </script>
+</body>
+</html>
